@@ -299,11 +299,25 @@ void Session::sendClipboardToHost(const char *text)
     }
 
     QByteArray incoming(text);
+
+    // Windows clipboard text uses CRLF, which the host would keep literally.
+    incoming.replace("\r\n", "\n");
+
+    if (incoming.size() > SS_CLIPBOARD_TEXT_MAX) {
+        // Step back to a code point boundary so we never send half a character.
+        int cut = SS_CLIPBOARD_TEXT_MAX;
+        while (cut > 0 && (static_cast<unsigned char>(incoming.at(cut)) & 0xC0) == 0x80) {
+            cut--;
+        }
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Clipboard text truncated from %d to %d bytes",
+                    static_cast<int>(incoming.size()),
+                    cut);
+        incoming.truncate(cut);
+    }
+
     if (incoming == m_ClipboardEcho) {
         return;
-    }
-    if (incoming.size() > SS_CLIPBOARD_TEXT_MAX) {
-        incoming.truncate(SS_CLIPBOARD_TEXT_MAX);
     }
 
     m_ClipboardEcho = incoming;
