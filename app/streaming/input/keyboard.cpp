@@ -195,6 +195,25 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         return;
     }
 
+    // Short aliases for the two combos used most often. Scancodes keep them
+    // on the same physical keys in any keyboard layout, including Cyrillic.
+    // Requiring plain Alt keeps AltGr (reported as Ctrl+Alt on Windows) typing.
+    if ((event->state == SDL_PRESSED) &&
+            (event->keysym.mod & KMOD_ALT) &&
+            !(event->keysym.mod & (KMOD_CTRL | KMOD_SHIFT | KMOD_GUI))) {
+        if (event->keysym.scancode == SDL_SCANCODE_Q && m_SpecialKeyCombos[KeyComboQuit].enabled) {
+            performSpecialKeyCombo(KeyComboQuit);
+            return;
+        }
+        if (event->keysym.scancode == SDL_SCANCODE_K && m_SpecialKeyCombos[KeyComboToggleKeyboardGrab].enabled) {
+            performSpecialKeyCombo(KeyComboToggleKeyboardGrab);
+
+            // The grab change can swallow the Alt key up, so don't leave it stuck on the host.
+            raiseAllKeys();
+            return;
+        }
+    }
+
     // Check for our special key combos
     if ((event->state == SDL_PRESSED) &&
             (event->keysym.mod & KMOD_CTRL) &&
