@@ -377,8 +377,9 @@ ApplicationWindow {
                 }
 
                 Component.onCompleted: {
+                    // This private build never checks for updates, because an official
+                    // release would remove clipboard sync and the Alt shortcuts.
                     AutoUpdateChecker.onUpdateAvailable.connect(updateAvailable)
-                    AutoUpdateChecker.start()
                 }
 
                 Keys.onDownPressed: {
